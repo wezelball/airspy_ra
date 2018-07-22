@@ -5,7 +5,7 @@
 # Title: airspy_gnuradio
 # Author: Dave Cohen
 # Description: Study in file output from Airspy
-# Generated: Sat Jul 21 17:40:55 2018
+# Generated: Sat Jul 21 22:27:21 2018
 ##################################################
 
 
@@ -21,12 +21,12 @@ if __name__ == '__main__':
 
 from gnuradio import blocks
 from gnuradio import eng_notation
+from gnuradio import filter
 from gnuradio import gr
 from gnuradio import wxgui
 from gnuradio.eng_option import eng_option
-from gnuradio.fft import window
 from gnuradio.filter import firdes
-from gnuradio.wxgui import fftsink2
+from gnuradio.wxgui import scopesink2
 from grc_gnuradio import wxgui as grc_wxgui
 from optparse import OptionParser
 import osmosdr
@@ -45,29 +45,28 @@ class top_block(grc_wxgui.top_block_gui):
         # Variables
         ##################################################
         self.samp_rate = samp_rate = 2.5e6
+        self.freq = freq = 600e6
 
         ##################################################
         # Blocks
         ##################################################
-        self.wxgui_fftsink2_0 = fftsink2.fft_sink_c(
+        self.wxgui_scopesink2_0 = scopesink2.scope_sink_f(
         	self.GetWin(),
-        	baseband_freq=0,
-        	y_per_div=10,
-        	y_divs=10,
-        	ref_level=0,
-        	ref_scale=2.0,
+        	title='Scope Plot',
         	sample_rate=samp_rate,
-        	fft_size=1024,
-        	fft_rate=15,
-        	average=False,
-        	avg_alpha=None,
-        	title='FFT Plot',
-        	peak_hold=False,
+        	v_scale=0,
+        	v_offset=0,
+        	t_scale=0,
+        	ac_couple=False,
+        	xy_mode=False,
+        	num_inputs=1,
+        	trig_mode=wxgui.TRIG_MODE_STRIPCHART,
+        	y_axis_label='Counts',
         )
-        self.Add(self.wxgui_fftsink2_0.win)
+        self.Add(self.wxgui_scopesink2_0.win)
         self.osmosdr_source_0 = osmosdr.source( args="numchan=" + str(1) + " " + 'airspy=0' )
         self.osmosdr_source_0.set_sample_rate(samp_rate)
-        self.osmosdr_source_0.set_center_freq(88.9e6, 0)
+        self.osmosdr_source_0.set_center_freq(freq, 0)
         self.osmosdr_source_0.set_freq_corr(0, 0)
         self.osmosdr_source_0.set_dc_offset_mode(2, 0)
         self.osmosdr_source_0.set_iq_balance_mode(0, 0)
@@ -78,22 +77,36 @@ class top_block(grc_wxgui.top_block_gui):
         self.osmosdr_source_0.set_antenna('', 0)
         self.osmosdr_source_0.set_bandwidth(0, 0)
 
-        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_gr_complex*1, '/home/dcohen/Documents/devel/airspy_ra/airspy_gnuradio/airspy_iqdata.dat', False)
-        self.blocks_file_sink_0.set_unbuffered(False)
+        self.low_pass_filter_0 = filter.fir_filter_fff(10, firdes.low_pass(
+        	1, samp_rate, 1000, 10000, firdes.WIN_HAMMING, 6.76))
+        self.blocks_moving_average_xx_0 = blocks.moving_average_ff(50000, 1, 4000)
+        self.blocks_keep_one_in_n_0 = blocks.keep_one_in_n(gr.sizeof_float*1, 1000)
+        self.blocks_complex_to_mag_squared_0 = blocks.complex_to_mag_squared(1)
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.osmosdr_source_0, 0), (self.blocks_file_sink_0, 0))
-        self.connect((self.osmosdr_source_0, 0), (self.wxgui_fftsink2_0, 0))
+        self.connect((self.blocks_complex_to_mag_squared_0, 0), (self.low_pass_filter_0, 0))
+        self.connect((self.blocks_keep_one_in_n_0, 0), (self.blocks_moving_average_xx_0, 0))
+        self.connect((self.blocks_moving_average_xx_0, 0), (self.wxgui_scopesink2_0, 0))
+        self.connect((self.low_pass_filter_0, 0), (self.blocks_keep_one_in_n_0, 0))
+        self.connect((self.osmosdr_source_0, 0), (self.blocks_complex_to_mag_squared_0, 0))
 
     def get_samp_rate(self):
         return self.samp_rate
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
-        self.wxgui_fftsink2_0.set_sample_rate(self.samp_rate)
+        self.wxgui_scopesink2_0.set_sample_rate(self.samp_rate)
         self.osmosdr_source_0.set_sample_rate(self.samp_rate)
+        self.low_pass_filter_0.set_taps(firdes.low_pass(1, self.samp_rate, 1000, 10000, firdes.WIN_HAMMING, 6.76))
+
+    def get_freq(self):
+        return self.freq
+
+    def set_freq(self, freq):
+        self.freq = freq
+        self.osmosdr_source_0.set_center_freq(self.freq, 0)
 
 
 def main(top_block_cls=top_block, options=None):
