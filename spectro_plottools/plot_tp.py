@@ -16,12 +16,17 @@ df_utc = df[['UTC_h', 'UTC_m', 'UTC_s', 'tp']]
 df_lst = df[['LST_h', 'LST_m', 'LST_s', 'tp']]
 
 # Create a column that is can be read by pandas, H:M:S
-df_utc['utime'] = df_utc['UTC_h'].astype(str) + ':' + df_utc['UTC_m'].astype(str) + ':' + df_utc['UTC_s'].astype(str)
-df_lst['ltime'] = df_lst['LST_h'].astype(str) + ':' + df_lst['LST_m'].astype(str) + ':' + df_lst['LST_s'].astype(str)
+df_utc['utime'] = df_utc['UTC_h'].astype(str) + ':' \
+	+ df_utc['UTC_m'].astype(str) + ':' + df_utc['UTC_s'].astype(str)
+df_lst['ltime'] = df_lst['LST_h'].astype(str) + ':' \
+	+ df_lst['LST_m'].astype(str) + ':' + df_lst['LST_s'].astype(str)
 
 # Try to get dates
 df_utc['time'] = pd.to_datetime(df_utc['utime'], format="%H:%M:%S")
 df_lst['time'] = pd.to_datetime(df_lst['ltime'], format="%H:%M:%S")
+
+# Set the index to the time
+#df_utc.set_index('time', inplace=True)
 
 # This is scipy low pass filter
 # spell out the args that were passed to the Matlab function
@@ -36,15 +41,25 @@ h = scipy.signal.firwin(numtaps=N, cutoff=40, nyq=Fs/2)
 filterseries = pd.Series(df_utc['tp'])	
 df_utc['filtered'] = scipy.signal.lfilter(h, 1.0, filterseries)
 
+# Try to select a time range, a little daunting, but logical
+# I tried to do this on the time series, but it didn't seem to
+# work correctly, although the utime did
+
+# between 2 times
+#df_utc_range = df_utc[(df_utc['utime'] > '12:35:34') & (df_utc['utime'] < '12:35:52')]
+# greater than a particular time
+df_utc_range = df_utc[(df_utc['utime'] > '18:00:00')]
+
+
 # See what they look like
-#print(df.head())
 print(df_utc.head())
-print(df_lst.head())
+#print(df_lst.head())
 
 # Plot the values
 df_utc.plot('time', 'tp')
-df_utc.plot('time', 'filtered')
-
+df_utc_range.plot('time', 'tp')
+df_utc_range.plot('time', 'filtered')
+#df_utc.plot('time', 'filtered')
 #df_lst.plot('time', 'tp')
 plt.show()
 
