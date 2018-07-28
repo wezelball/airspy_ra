@@ -5,7 +5,7 @@ import scipy.signal
 from datetime import datetime, timedelta
 
 # Read the data file in
-df = pd.read_csv ("~/Documents/devel/airspy_ra/spectro_plottools/h120180722-tp.csv", \
+df = pd.read_csv ("~/Documents/devel/airspy_ra/spectro_plottools/h120180728-tp.csv", \
 	usecols=(0,1,2,3,4,5,9), header=None)
 
 # Assign column values
@@ -46,7 +46,7 @@ df['filtered'] = scipy.signal.lfilter(h, 1.0, filterseries)
 # between 2 times
 #df_utc_range = df[(df['utime'] > '12:35:34') & (df['utime'] < '12:35:52')]
 # greater than a particular time
-df_utc_range = df[(df['utime'] > '18:00:00')]
+df_utc_range = df[(df['utime'] > '12:00:00')]
 
 #df_utc_range = df_utc[(df_utc['utime'] > '18:00:00')]
 

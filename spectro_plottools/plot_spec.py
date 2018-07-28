@@ -5,7 +5,7 @@ import scipy.signal
 from datetime import datetime, timedelta
 
 # Read the data file in
-df = pd.read_csv ("~/Documents/devel/airspy_ra/spectro_plottools/h120180722-spec.csv", \
+df = pd.read_csv ("~/Documents/devel/airspy_ra/spectro_plottools/h120180728-spec.csv", \
 	header=None)
 	
 # Assign column headers for UTC/LST times, and the frequency

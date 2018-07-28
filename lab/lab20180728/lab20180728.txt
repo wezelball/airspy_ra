@@ -1,0 +1,92 @@
+Lab_20180728
+
+STEP 1
+
+Take a 5 minute recording of Airspy data at 10 Msps, and plot it
+using spectro_radiometer_filesource.py
+
+Use the following command to take the data:
+airspy_rx -t 0 -r ./airspyiq.dat -a 0 -f 1420.2 -g 18 -d -n 3000000000 2>&1 | tee lab20180728_airspyrecord.txt
+
+That's float32 IQ data, 3 billion sample IQ psirs, roughly 18GB of data,
+linearity gain 18 of 21 max, verbose mode:
+
+Results of recording as follows (output of airspy_rx.c):
+
+
+airspy_rx v1.0.5 23 April 2016
+packing -p 0
+frequency_MHz -f 1420.200000MHz (1420200000Hz)
+sample_type -t 0
+biast -b 0
+linearity_gain -g 18
+num_samples -n 3000000000 (3000M)
+sample_rate -a 0 (10.000000 MSPS IQ)
+Device Serial Number: 0x04A464C8346B940B
+Stop with Ctrl-C
+Streaming at 10.019 MSPS
+Streaming at 10.008 MSPS
+Streaming at 10.000 MSPS
+Streaming at 10.000 MSPS
+Streaming at 10.001 MSPS
+Streaming at 10.002 MSPS
+Streaming at 10.000 MSPS
+Streaming at 9.997 MSPS
+Streaming at 10.001 MSPS
+Streaming at 10.002 MSPS
+Streaming at 10.001 MSPS
+Streaming at 9.998 MSPS
+Streaming at 10.000 MSPS
+Streaming at 10.011 MSPS
+Streaming at 10.004 MSPS
+Streaming at 9.254 MSPS
+Streaming at 9.617 MSPS
+Streaming at 9.801 MSPS
+...
+(more of the same)
+...
+
+Streaming at 9.997 MSPS
+Streaming at 9.998 MSPS
+Streaming at 9.996 MSPS
+Streaming at 9.854 MSPS
+
+User cancel, exiting...
+Total time: 314.0804 s
+Average speed 9.8347 MSPS IQ
+done
+
+The output result:
+-rw-rw-r-- 1 dcohen dcohen 24000000000 Jul 28 08:22 airspyiq.dat
+
+File size exactly 24GB in size. There are 8 bytes per sample, 3 x 10^9
+samples, which works out exactly to 24 GB.  So the application will
+take exactly the number of samples you ask of it, taking the 
+exact hard drive space.  The variable is time - if the system can't 
+keep up, the time is extended such that all samples are taken.
+
+
+STEP 2
+
+Feed the data into spectro_radiometer_filesource.py, producing 
+total power and spectral data output, hopefully.
+
+Executed the following (noting some of the parameters like --device
+are meaningless):
+./spectro_radiometer_filesource.py --abw=250e3 --bw=250e3 --device="airspy=0 file=/dev/zero,rate=2.5e6" --frequency=1420.4058e6 --mode=total --srate=10e6 --latitude=37.79 --longitude=-77.92
+
+Performed the above command, output two files as follows:
+
+-rw-rw-r-- 1 dcohen dcohen 445997 Jul 28 08:54 h120180728-spec.csv
+-rw-rw-r-- 1 dcohen dcohen  31815 Jul 28 08:54 h120180728-tp.csv
+
+I think the output can continued past end of file, and that total power
+data (other than time) just never changes anymore.  I stopped the
+application when I noticed the baseline plot in the spectral window
+stopped.
+
+STEP 3
+
+Using pandas, plot the data.
+
+I was able to successfull plot the data, still need to verify it.
