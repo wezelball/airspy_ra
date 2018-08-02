@@ -5,16 +5,11 @@ import scipy.signal
 from datetime import datetime, timedelta
 
 # Read the data file in
-df = pd.read_csv ("~/Documents/devel/airspy_ra/spectro_plottools/h120180728-tp.csv", \
+df = pd.read_csv ("~/Documents/devel/airspy_ra/lab/lab20180730/h120180730-tp.csv", \
 	usecols=(0,1,2,3,4,5,9), header=None)
 
 # Assign column values
 df.columns=['UTC_h', 'UTC_m', 'UTC_s', 'LST_h', 'LST_m','LST_s','tp']
-
-# UTC dataframe
-#df_utc = df[['UTC_h', 'UTC_m', 'UTC_s', 'tp']]
-# LST dataframe
-#df_lst = df[['LST_h', 'LST_m', 'LST_s', 'tp']]
 
 # Create a column that is can be read by pandas, H:M:S
 df['utime'] = df['UTC_h'].astype(str) + ':' \

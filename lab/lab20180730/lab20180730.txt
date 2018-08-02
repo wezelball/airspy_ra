@@ -1,0 +1,71 @@
+Lab_20180730
+
+STEP 1
+
+Take a 5 minute recording of Airspy data at 10 Msps, and plot it
+using spectro_radiometer_filesource.py
+
+Use the following command to take the data:
+airspy_rx -t 0 -r ./airspyiq.dat -a 0 -f 144.384 -g 20 -d -n 3000000000 2>&1 | tee lab20180730_airspyrecord.txt
+
+This time there should be some noise in the band, this is 2 meters and 
+there are a couple of small intermittent signals.
+
+That's float32 IQ data, 3 billion sample IQ psirs, roughly 18GB of data,
+linearity gain 20 of 21 max, verbose mode:
+
+Results of recording as follows (output of airspy_rx.c):
+
+airspy_rx v1.0.5 23 April 2016
+packing -p 0
+frequency_MHz -f 144.384000MHz (144384000Hz)
+sample_type -t 0
+biast -b 0
+linearity_gain -g 20
+num_samples -n 3000000000 (3000M)
+sample_rate -a 0 (10.000000 MSPS IQ)
+Device Serial Number: 0x04A464C8346B940B
+Stop with Ctrl-C
+Streaming at 10.022 MSPS
+...
+...
+User cancel, exiting...
+Total time: 316.0635 s
+Average speed 9.8349 MSPS IQ
+done
+
+
+The output result:
+-rw-rw-r-- 1 dcohen dcohen 24000000000 Jul 30 19:29 airspyiq.dat
+
+File size exactly 24GB in size. There are 8 bytes per sample, 3 x 10^9
+samples, which works out exactly to 24 GB.  So the application will
+take exactly the number of samples you ask of it, taking the 
+exact hard drive space.  The variable is time - if the system can't 
+keep up, the time is extended such that all samples are taken.
+
+
+STEP 2
+
+Feed the data into spectro_radiometer_filesource.py, producing 
+total power and spectral data output, hopefully.
+
+Executed the following (noting some of the parameters like --device
+are meaningless):
+./spectro_radiometer_filesource.py --abw=250e3 --bw=250e3 --device="airspy=0 file=/dev/zero,rate=2.5e6" --frequency=144.384e6 --mode=total --srate=10e6 --latitude=37.79 --longitude=-77.92
+
+Performed the above command, output two files as follows:
+
+-rw-rw-r-- 1 dcohen dcohen 273334 Jul 30 19:56 h120180730-spec.csv
+-rw-rw-r-- 1 dcohen dcohen  18408 Jul 30 19:56 h120180730-tp.csv
+
+I stopped the application when the baseline plot in the spectral window
+stopped.
+
+STEP 3
+
+Using pandas, plot the data.
+
+This data looked like it was pretty real, had noise in it.  I think this
+is a success, but only real observations and comparisons with data 
+taken from my laptop using real-time spectro_radiometer will tell.
